@@ -1,6 +1,6 @@
-# [Project name]
+# Smart University Timetable Management System
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+SUTMS generates and validates conflict-free university timetables for AAU CNCS using Google OR-Tools CP-SAT.
 
 ## Run & Operate
 
@@ -10,6 +10,7 @@ _Replace the heading above with the project's name, and this line with one sente
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string
+- The scheduling worker uses the Python environment created from `pyproject.toml`; install dependencies with `uv sync` when setting up a fresh environment.
 
 ## Stack
 
@@ -22,23 +23,33 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `lib/api-spec/openapi.yaml` — source of truth for scheduling request and response contracts
+- `artifacts/api-server/src/routes/scheduling.ts` — scheduling API endpoints and request validation
+- `artifacts/api-server/src/scheduling/solver.py` — OR-Tools CP-SAT model and conflict detector
+- `artifacts/api-server/src/scheduling/worker.ts` — bounded Node-to-Python worker bridge
+- `lib/api-client-react/src/generated/` — generated React Query hooks and TypeScript types
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Scheduling is isolated as a Python OR-Tools worker while the existing Node API remains the transport and authentication boundary.
+- The first scheduling slice accepts in-memory scheduling data, matching the paper ERD without prematurely locking the unreviewed database design into migrations.
+- Fixed time slots are represented by day and minute ranges; overlapping ranges are treated as conflicts, not only identical slot IDs.
+- Student enrollment is represented as `studentIds` on each offering in this API slice and can later be populated from the ERD's `ENROLLMENT` table.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- `GET /api/scheduling/health` reports OR-Tools availability.
+- `POST /api/scheduling/generate` creates a timetable while enforcing room, lecturer, section, student, capacity, room type, and availability constraints.
+- `POST /api/scheduling/conflicts` validates manual or edited placements and returns human-readable conflict codes.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Authentication already exists and is outside the scheduling implementation; scheduling routes do not replace or duplicate it.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Run API commands from the workspace root when possible. The managed API workflow changes its working directory, so the worker bridge resolves both artifact-local and workspace-root paths.
+- After changing `lib/api-spec/openapi.yaml`, run `pnpm --filter @workspace/api-spec run codegen`.
 
 ## Pointers
 

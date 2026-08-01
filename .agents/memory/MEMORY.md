@@ -1,0 +1,1 @@
+- [Scheduling worker paths](scheduling-worker-paths.md) — managed API workflows may run from the artifact directory, so subprocess paths must support both working directories.
