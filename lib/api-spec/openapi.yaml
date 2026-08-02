@@ -1,0 +1,443 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: scheduling
+    description: OR-Tools timetable generation and conflict detection
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /scheduling/health:
+    get:
+      operationId: schedulingHealth
+      tags: [scheduling]
+      summary: Check scheduling engine availability
+      responses:
+        "200":
+          description: Scheduling engine status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SchedulingHealth"
+  /scheduling/generate:
+    post:
+      operationId: generateSchedule
+      tags: [scheduling]
+      summary: Generate a conflict-free timetable with OR-Tools
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScheduleGenerationRequest"
+      responses:
+        "200":
+          description: Solver result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleGenerationResponse"
+        "400":
+          description: Invalid scheduling input
+        "500":
+          description: Scheduling engine failure
+  /scheduling/conflicts:
+    post:
+      operationId: detectScheduleConflicts
+      tags: [scheduling]
+      summary: Detect conflicts in a draft or manually edited timetable
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConflictDetectionRequest"
+      responses:
+        "200":
+          description: Detected conflicts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConflictDetectionResponse"
+        "400":
+          description: Invalid scheduling input
+  /scheduling/runs:
+    get:
+      operationId: listTimetableRuns
+      tags: [scheduling]
+      summary: List saved timetable drafts
+      responses:
+        "200":
+          description: Saved timetable drafts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TimetableRunSummary"
+    post:
+      operationId: createTimetableRun
+      tags: [scheduling]
+      summary: Generate and save a timetable draft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTimetableRunRequest"
+      responses:
+        "201":
+          description: Saved timetable draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimetableRunDetail"
+        "400":
+          description: Invalid scheduling input
+        "500":
+          description: Scheduling engine or database failure
+  /scheduling/runs/{runId}:
+    get:
+      operationId: getTimetableRun
+      tags: [scheduling]
+      summary: Get a saved timetable draft
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Saved timetable draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimetableRunDetail"
+        "404":
+          description: Timetable draft not found
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    DayOfWeek:
+      type: string
+      enum: [MON, TUE, WED, THU, FRI, SAT]
+    RoomType:
+      type: string
+      enum: [LECTURE, LAB]
+    CourseType:
+      type: string
+      enum: [THEORY, LAB]
+    TimeSlot:
+      type: object
+      properties:
+        id:
+          type: string
+        day:
+          $ref: "#/components/schemas/DayOfWeek"
+        startMinute:
+          type: number
+          minimum: 0
+          maximum: 1439
+        endMinute:
+          type: number
+          minimum: 1
+          maximum: 1440
+      required: [id, day, startMinute, endMinute]
+    Room:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        capacity:
+          type: number
+          minimum: 1
+        type:
+          $ref: "#/components/schemas/RoomType"
+      required: [id, name, capacity, type]
+    Availability:
+      type: object
+      properties:
+        day:
+          $ref: "#/components/schemas/DayOfWeek"
+        startMinute:
+          type: number
+          minimum: 0
+          maximum: 1439
+        endMinute:
+          type: number
+          minimum: 1
+          maximum: 1440
+      required: [day, startMinute, endMinute]
+    Lecturer:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        availability:
+          type: array
+          items:
+            $ref: "#/components/schemas/Availability"
+      required: [id, name, availability]
+    Section:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        capacity:
+          type: number
+          minimum: 1
+      required: [id, name, capacity]
+    CourseOffering:
+      type: object
+      properties:
+        id:
+          type: string
+        courseCode:
+          type: string
+        courseName:
+          type: string
+        lecturerId:
+          type: string
+        sectionId:
+          type: string
+        courseType:
+          $ref: "#/components/schemas/CourseType"
+        requiredRoomType:
+          $ref: "#/components/schemas/RoomType"
+        studentIds:
+          type: array
+          items:
+            type: string
+        allowedTimeSlotIds:
+          type: array
+          items:
+            type: string
+        preferredTimeSlotIds:
+          type: array
+          items:
+            type: string
+        forbiddenTimeSlotIds:
+          type: array
+          items:
+            type: string
+      required:
+        [id, courseCode, courseName, lecturerId, sectionId, courseType, studentIds]
+    ScheduleGenerationRequest:
+      type: object
+      properties:
+        timeSlots:
+          type: array
+          items:
+            $ref: "#/components/schemas/TimeSlot"
+        rooms:
+          type: array
+          items:
+            $ref: "#/components/schemas/Room"
+        lecturers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Lecturer"
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/Section"
+        offerings:
+          type: array
+          items:
+            $ref: "#/components/schemas/CourseOffering"
+        timeLimitSeconds:
+          type: number
+          minimum: 1
+          maximum: 120
+      required: [timeSlots, rooms, lecturers, sections, offerings]
+    Placement:
+      type: object
+      properties:
+        offeringId:
+          type: string
+        timeSlotId:
+          type: string
+        roomId:
+          type: string
+      required: [offeringId, timeSlotId, roomId]
+    SolverConflict:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            [INVALID_REFERENCE, NO_AVAILABLE_ASSIGNMENT, INFEASIBLE_MODEL, ROOM_CAPACITY, ROOM_TYPE, LECTURER_AVAILABILITY, ROOM_DOUBLE_BOOKING, LECTURER_DOUBLE_BOOKING, SECTION_DOUBLE_BOOKING, STUDENT_DOUBLE_BOOKING]
+        message:
+          type: string
+        offeringIds:
+          type: array
+          items:
+            type: string
+        roomId:
+          type: string
+        timeSlotId:
+          type: string
+      required: [code, message, offeringIds]
+    ScheduleGenerationResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [OPTIMAL, FEASIBLE, INFEASIBLE, MODEL_INVALID, UNKNOWN]
+        placements:
+          type: array
+          items:
+            $ref: "#/components/schemas/Placement"
+        conflicts:
+          type: array
+          items:
+            $ref: "#/components/schemas/SolverConflict"
+        objectiveValue:
+          type: number
+        solveTimeMs:
+          type: number
+        message:
+          type: string
+      required: [status, placements, conflicts, objectiveValue, solveTimeMs, message]
+    ScheduleGenerationResponseStatus:
+      type: string
+      enum: [OPTIMAL, FEASIBLE, INFEASIBLE, MODEL_INVALID, UNKNOWN]
+    ConflictDetectionRequest:
+      type: object
+      properties:
+        timeSlots:
+          type: array
+          items:
+            $ref: "#/components/schemas/TimeSlot"
+        rooms:
+          type: array
+          items:
+            $ref: "#/components/schemas/Room"
+        lecturers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Lecturer"
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/Section"
+        offerings:
+          type: array
+          items:
+            $ref: "#/components/schemas/CourseOffering"
+        placements:
+          type: array
+          items:
+            $ref: "#/components/schemas/Placement"
+      required: [timeSlots, rooms, lecturers, sections, offerings, placements]
+    ConflictDetectionResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        conflicts:
+          type: array
+          items:
+            $ref: "#/components/schemas/SolverConflict"
+      required: [valid, conflicts]
+    SchedulingHealth:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ready, unavailable]
+        solver:
+          type: string
+        version:
+          type: string
+      required: [status, solver, version]
+    TimetableRunStatus:
+      type: string
+      enum: [draft, published, archived]
+    CreateTimetableRunRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        schedule:
+          $ref: "#/components/schemas/ScheduleGenerationRequest"
+      required: [name, schedule]
+    TimetableRunSummary:
+      type: object
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        status:
+          $ref: "#/components/schemas/TimetableRunStatus"
+        solverStatus:
+          $ref: "#/components/schemas/ScheduleGenerationResponseStatus"
+        offeringCount:
+          type: number
+        placementCount:
+          type: number
+        conflictCount:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        [id, name, status, solverStatus, offeringCount, placementCount, conflictCount, createdAt]
+    TimetableRunDetail:
+      allOf:
+        - $ref: "#/components/schemas/TimetableRunSummary"
+        - type: object
+          properties:
+            schedule:
+              $ref: "#/components/schemas/ScheduleGenerationRequest"
+            placements:
+              type: array
+              items:
+                $ref: "#/components/schemas/Placement"
+            conflicts:
+              type: array
+              items:
+                $ref: "#/components/schemas/SolverConflict"
+            objectiveValue:
+              type: number
+            solveTimeMs:
+              type: number
+            message:
+              type: string
+          required: [schedule, placements, conflicts, objectiveValue, solveTimeMs, message]
+

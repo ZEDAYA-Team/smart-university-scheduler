@@ -1,32 +1,21 @@
-# --- Node / Frontend ---
-node_modules/
-.next/
-out/
-frontend/.env*.local
-
-# --- Python / Backend & Scheduler ---
-__pycache__/
-*.pyc
-.venv/
-venv/
-*.egg-info/
-backend/.env
-scheduler-engine/.env
-
-# --- Env & secrets ---
+# Environment variables (CRITICAL)
 .env
-.env.*
-!.env.example
+.env.local
+.env.*.local
 
-# --- OS / Editor ---
-.DS_Store
-.vscode/
-.idea/
+# Dependencies
+node_modules/
+.pnpm-store/
 
-# --- Build artifacts ---
+# Build outputs
 dist/
 build/
-*.log
+.output/
 
-# --- Database ---
-*.sqlite3
+# Editor / OS files
+.DS_Store
+.vscode/
+# Build artifacts & local cache
+.local/
+*.tsbuildinfo
+__pycache__/
