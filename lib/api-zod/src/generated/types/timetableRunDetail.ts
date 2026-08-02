@@ -6,14 +6,15 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Placement } from './placement';
-import type { ScheduleGenerationResponseStatusProperty } from './scheduleGenerationResponseStatusProperty';
+import type { ScheduleGenerationRequest } from './scheduleGenerationRequest';
 import type { SolverConflict } from './solverConflict';
+import type { TimetableRunSummary } from './timetableRunSummary';
 
-export interface ScheduleGenerationResponse {
-  status: ScheduleGenerationResponseStatusProperty;
+export type TimetableRunDetail = TimetableRunSummary & {
+  schedule: ScheduleGenerationRequest;
   placements: Placement[];
   conflicts: SolverConflict[];
   objectiveValue: number;
   solveTimeMs: number;
   message: string;
-}
+};

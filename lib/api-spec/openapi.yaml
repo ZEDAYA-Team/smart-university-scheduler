@@ -80,6 +80,61 @@ paths:
                 $ref: "#/components/schemas/ConflictDetectionResponse"
         "400":
           description: Invalid scheduling input
+  /scheduling/runs:
+    get:
+      operationId: listTimetableRuns
+      tags: [scheduling]
+      summary: List saved timetable drafts
+      responses:
+        "200":
+          description: Saved timetable drafts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TimetableRunSummary"
+    post:
+      operationId: createTimetableRun
+      tags: [scheduling]
+      summary: Generate and save a timetable draft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTimetableRunRequest"
+      responses:
+        "201":
+          description: Saved timetable draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimetableRunDetail"
+        "400":
+          description: Invalid scheduling input
+        "500":
+          description: Scheduling engine or database failure
+  /scheduling/runs/{runId}:
+    get:
+      operationId: getTimetableRun
+      tags: [scheduling]
+      summary: Get a saved timetable draft
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Saved timetable draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimetableRunDetail"
+        "404":
+          description: Timetable draft not found
 components:
   schemas:
     HealthStatus:
@@ -276,6 +331,9 @@ components:
         message:
           type: string
       required: [status, placements, conflicts, objectiveValue, solveTimeMs, message]
+    ScheduleGenerationResponseStatus:
+      type: string
+      enum: [OPTIMAL, FEASIBLE, INFEASIBLE, MODEL_INVALID, UNKNOWN]
     ConflictDetectionRequest:
       type: object
       properties:
@@ -325,4 +383,61 @@ components:
         version:
           type: string
       required: [status, solver, version]
+    TimetableRunStatus:
+      type: string
+      enum: [draft, published, archived]
+    CreateTimetableRunRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        schedule:
+          $ref: "#/components/schemas/ScheduleGenerationRequest"
+      required: [name, schedule]
+    TimetableRunSummary:
+      type: object
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        status:
+          $ref: "#/components/schemas/TimetableRunStatus"
+        solverStatus:
+          $ref: "#/components/schemas/ScheduleGenerationResponseStatus"
+        offeringCount:
+          type: number
+        placementCount:
+          type: number
+        conflictCount:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        [id, name, status, solverStatus, offeringCount, placementCount, conflictCount, createdAt]
+    TimetableRunDetail:
+      allOf:
+        - $ref: "#/components/schemas/TimetableRunSummary"
+        - type: object
+          properties:
+            schedule:
+              $ref: "#/components/schemas/ScheduleGenerationRequest"
+            placements:
+              type: array
+              items:
+                $ref: "#/components/schemas/Placement"
+            conflicts:
+              type: array
+              items:
+                $ref: "#/components/schemas/SolverConflict"
+            objectiveValue:
+              type: number
+            solveTimeMs:
+              type: number
+            message:
+              type: string
+          required: [schedule, placements, conflicts, objectiveValue, solveTimeMs, message]
 

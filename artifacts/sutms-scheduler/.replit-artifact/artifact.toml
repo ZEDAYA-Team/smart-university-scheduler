@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "SUTMS Scheduler"
+description = "An admin timetable workspace for SUTMS that generates conflict-free schedules with OR-Tools, saves draft timetable versions, and lets administrators review placements and conflicts before publishing."
+version = "1.0.0"
+id = "artifacts/sutms-scheduler"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25726
+
+[services.development]
+run = "pnpm --filter @workspace/sutms-scheduler run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/sutms-scheduler", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/sutms-scheduler/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25726"
+BASE_PATH = "/"

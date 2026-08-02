@@ -22,10 +22,13 @@ import type {
 import type {
   ConflictDetectionRequest,
   ConflictDetectionResponse,
+  CreateTimetableRunRequest,
   HealthStatus,
   ScheduleGenerationRequest,
   ScheduleGenerationResponse,
-  SchedulingHealth
+  SchedulingHealth,
+  TimetableRunDetail,
+  TimetableRunSummary
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -351,4 +354,229 @@ export const useDetectScheduleConflicts = <TError = ErrorType<void>,
       > => {
       return useMutation(getDetectScheduleConflictsMutationOptions(options));
     }
+
+export const getListTimetableRunsUrl = () => {
+
+
+
+
+  return `/api/scheduling/runs`
+}
+
+/**
+ * @summary List saved timetable drafts
+ */
+export const listTimetableRuns = async ( options?: Parameters<typeof customFetch>[1]): Promise<TimetableRunSummary[]> => {
+
+  return customFetch<TimetableRunSummary[]>(getListTimetableRunsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTimetableRunsQueryKey = () => {
+    return [
+    `/api/scheduling/runs`
+    ] as const;
+    }
+
+
+export const getListTimetableRunsQueryOptions = <TData = Awaited<ReturnType<typeof listTimetableRuns>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTimetableRuns>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTimetableRunsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTimetableRuns>>> = ({ signal }) => listTimetableRuns({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTimetableRuns>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTimetableRunsQueryResult = NonNullable<Awaited<ReturnType<typeof listTimetableRuns>>>
+export type ListTimetableRunsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List saved timetable drafts
+ */
+
+export function useListTimetableRuns<TData = Awaited<ReturnType<typeof listTimetableRuns>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTimetableRuns>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTimetableRunsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateTimetableRunUrl = () => {
+
+
+
+
+  return `/api/scheduling/runs`
+}
+
+/**
+ * @summary Generate and save a timetable draft
+ */
+export const createTimetableRun = async (createTimetableRunRequest: CreateTimetableRunRequest, options?: Parameters<typeof customFetch>[1]): Promise<TimetableRunDetail> => {
+
+  return customFetch<TimetableRunDetail>(getCreateTimetableRunUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(createTimetableRunRequest)
+  }
+);}
+
+
+
+
+
+export const getCreateTimetableRunMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTimetableRun>>, TError,{data: BodyType<CreateTimetableRunRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTimetableRun>>, TError,{data: BodyType<CreateTimetableRunRequest>}, TContext> => {
+
+const mutationKey = ['createTimetableRun'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTimetableRun>>, {data: BodyType<CreateTimetableRunRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createTimetableRun(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTimetableRunMutationResult = NonNullable<Awaited<ReturnType<typeof createTimetableRun>>>
+    export type CreateTimetableRunMutationBody = BodyType<CreateTimetableRunRequest>
+    export type CreateTimetableRunMutationError = ErrorType<void>
+
+    /**
+ * @summary Generate and save a timetable draft
+ */
+export const useCreateTimetableRun = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTimetableRun>>, TError,{data: BodyType<CreateTimetableRunRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createTimetableRun>>,
+        TError,
+        {data: BodyType<CreateTimetableRunRequest>},
+        TContext
+      > => {
+      return useMutation(getCreateTimetableRunMutationOptions(options));
+    }
+
+export const getGetTimetableRunUrl = (runId: number,) => {
+
+
+
+
+  return `/api/scheduling/runs/${runId}`
+}
+
+/**
+ * @summary Get a saved timetable draft
+ */
+export const getTimetableRun = async (runId: number, options?: Parameters<typeof customFetch>[1]): Promise<TimetableRunDetail> => {
+
+  return customFetch<TimetableRunDetail>(getGetTimetableRunUrl(runId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTimetableRunQueryKey = (runId: number,) => {
+    return [
+    `/api/scheduling/runs/${runId}`
+    ] as const;
+    }
+
+
+export const getGetTimetableRunQueryOptions = <TData = Awaited<ReturnType<typeof getTimetableRun>>, TError = ErrorType<void>>(runId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTimetableRun>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTimetableRunQueryKey(runId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTimetableRun>>> = ({ signal }) => getTimetableRun(runId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: runId !== null && runId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTimetableRun>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTimetableRunQueryResult = NonNullable<Awaited<ReturnType<typeof getTimetableRun>>>
+export type GetTimetableRunQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get a saved timetable draft
+ */
+
+export function useGetTimetableRun<TData = Awaited<ReturnType<typeof getTimetableRun>>, TError = ErrorType<void>>(
+ runId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTimetableRun>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTimetableRunQueryOptions(runId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 

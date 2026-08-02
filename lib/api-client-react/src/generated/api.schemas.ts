@@ -144,6 +144,26 @@ export interface SolverConflict {
   timeSlotId?: string;
 }
 
+export type ScheduleGenerationResponseStatusProperty = typeof ScheduleGenerationResponseStatusProperty[keyof typeof ScheduleGenerationResponseStatusProperty];
+
+
+export const ScheduleGenerationResponseStatusProperty = {
+  OPTIMAL: 'OPTIMAL',
+  FEASIBLE: 'FEASIBLE',
+  INFEASIBLE: 'INFEASIBLE',
+  MODEL_INVALID: 'MODEL_INVALID',
+  UNKNOWN: 'UNKNOWN',
+} as const;
+
+export interface ScheduleGenerationResponse {
+  status: ScheduleGenerationResponseStatusProperty;
+  placements: Placement[];
+  conflicts: SolverConflict[];
+  objectiveValue: number;
+  solveTimeMs: number;
+  message: string;
+}
+
 export type ScheduleGenerationResponseStatus = typeof ScheduleGenerationResponseStatus[keyof typeof ScheduleGenerationResponseStatus];
 
 
@@ -154,15 +174,6 @@ export const ScheduleGenerationResponseStatus = {
   MODEL_INVALID: 'MODEL_INVALID',
   UNKNOWN: 'UNKNOWN',
 } as const;
-
-export interface ScheduleGenerationResponse {
-  status: ScheduleGenerationResponseStatus;
-  placements: Placement[];
-  conflicts: SolverConflict[];
-  objectiveValue: number;
-  solveTimeMs: number;
-  message: string;
-}
 
 export interface ConflictDetectionRequest {
   timeSlots: TimeSlot[];
@@ -191,4 +202,42 @@ export interface SchedulingHealth {
   solver: string;
   version: string;
 }
+
+export type TimetableRunStatus = typeof TimetableRunStatus[keyof typeof TimetableRunStatus];
+
+
+export const TimetableRunStatus = {
+  draft: 'draft',
+  published: 'published',
+  archived: 'archived',
+} as const;
+
+export interface CreateTimetableRunRequest {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  schedule: ScheduleGenerationRequest;
+}
+
+export interface TimetableRunSummary {
+  id: number;
+  name: string;
+  status: TimetableRunStatus;
+  solverStatus: ScheduleGenerationResponseStatus;
+  offeringCount: number;
+  placementCount: number;
+  conflictCount: number;
+  createdAt: string;
+}
+
+export type TimetableRunDetail = TimetableRunSummary & {
+  schedule: ScheduleGenerationRequest;
+  placements: Placement[];
+  conflicts: SolverConflict[];
+  objectiveValue: number;
+  solveTimeMs: number;
+  message: string;
+};
 
