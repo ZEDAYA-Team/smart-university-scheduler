@@ -206,7 +206,7 @@ function RunList({
           </div>
         ) : (
           <div className="space-y-2">
-            {runs.map((run) => (
+           {(Array.isArray(runs) ? runs : []).map((run) => (
               <button
                 key={run.id}
                 onClick={() => onSelect(run.id)}
