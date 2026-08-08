@@ -1,4 +1,11 @@
+from fastapi import FastAPI
 
-# Routers get included here as they're built, e.g.:
-# from app.routes import auth, departments, courses
-# app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app = FastAPI(title="SUTMS API", version="0.1.0")
+
+
+@app.get("/health")
+def health_check():
+    """Basic liveness check -- useful for Week 1 demo and CI."""
+    return {"status": "ok"}
+
+
