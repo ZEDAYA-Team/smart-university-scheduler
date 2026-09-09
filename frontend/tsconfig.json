@@ -9,10 +9,15 @@
     "skipLibCheck": true,
     "strict": false,
     "noEmit": true,
-    "incremental": true,
+    "incremental": true, 
     "module": "esnext",
     "esModuleInterop": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "ignoreDeprecations": "5.0",
+    "paths": {
+      "@/*": ["./*"]
+    },
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",

@@ -20,13 +20,19 @@ services:
       - db
     environment:
       DATABASE_URL: postgresql://sutms:sutms@db:5432/sutms
+      SECRET_KEY: ${SECRET_KEY:-local-development-secret-change-before-production}
+      CORS_ORIGINS: http://localhost:3000
+      SEED_DEMO_DATA: "true"
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
     restart: unless-stopped
     depends_on:
       - backend
@@ -36,6 +42,8 @@ services:
       - "3000:3000"
     volumes:
       - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
 
 volumes:
   pgdata:
