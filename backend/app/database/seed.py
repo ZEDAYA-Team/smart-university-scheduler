@@ -4,7 +4,7 @@ from app.database.base import SessionLocal
 from app.models.auth import Role, User
 from app.security import hash_password
 
-DEMO_USERS = [("admin@sutms.local", "Admin", "User", "admin"), ("lecturer@sutms.local", "Lecturer", "User", "lecturer"), ("student@sutms.local", "Student", "User", "student")]
+DEMO_USERS = [("departmenthead@sutms.local", "Department", "User", "department_head"), ("admin@sutms.local", "Admin", "User", "admin"), ("lecturer@sutms.local", "Lecturer", "User", "lecturer"), ("student@sutms.local", "Student", "User", "student")]
 
 def seed_development_data() -> None:
     db: Session = SessionLocal()
